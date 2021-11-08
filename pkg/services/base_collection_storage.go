@@ -23,12 +23,17 @@ const (
 	GetOneByIDMethod         = "GetOneByID"
 	GetOneByFilterMethod     = "GetOneByFilter"
 	GetManyByFilterMethod    = "GetManyByFilter"
+	FindAllByFilterMethod    = "FindAllByFilter"
 	FindManyByFilterMethod   = "FindManyByFilter"
 	UpsertOneMethod          = "UpsertOne"
 	DeleteManyMethod         = "DeleteMany"
 	DeleteManyByFilterMethod = "DeleteManyByFilter"
 	DeleteOneByIDMethod      = "DeleteOneByID"
 	DeleteAllMethod          = "DeleteAll"
+	CloseCursorTimeout       = time.Second * 1
+	FetchTimeout             = time.Second * 1
+	QueryTimeout             = time.Second * 1
+	FilterTimeout            = time.Second * 1
 )
 
 type Hook func(ctx context.Context) error
@@ -202,16 +207,16 @@ func (s *BaseCollectionStorage) InsertMany(ctx context.Context, docs []interface
 		return []string{}, HandleDuplicationErr(err)
 	}
 
-	hexIDs := []string{}
+	hexIDs := make([]string, len(res.InsertedIDs))
 
-	for _, insertedID := range res.InsertedIDs {
+	for i, insertedID := range res.InsertedIDs {
 		objectID, ok := insertedID.(primitive.ObjectID)
 
 		if !ok {
-			return []string{}, ErrInvalidObjectID
+			return hexIDs, ErrInvalidObjectID
 		}
 
-		hexIDs = append(hexIDs, objectID.Hex())
+		hexIDs[i] = objectID.Hex()
 	}
 
 	return hexIDs, nil
@@ -436,7 +441,7 @@ func (s *BaseCollectionStorage) GetManyByFilter(
 
 	defer s.runAfterHooks(ctx, GetManyByFilterMethod)
 
-	filterCtx, filterCancel := context.WithTimeout(ctx, time.Second*3)
+	filterCtx, filterCancel := context.WithTimeout(ctx, FilterTimeout)
 	defer filterCancel()
 
 	cur, err := s.FindManyByFilter(filterCtx, filter, opts...)
@@ -444,13 +449,13 @@ func (s *BaseCollectionStorage) GetManyByFilter(
 		return nil, err
 	}
 
-	closeCtx, closeCancel := context.WithTimeout(ctx, time.Second*1)
+	closeCtx, closeCancel := context.WithTimeout(ctx, CloseCursorTimeout)
 	defer closeCancel()
 	defer cur.Close(closeCtx)
 
 	var l []Document
 
-	nextCtx, nextCancel := context.WithTimeout(context.Background(), time.Second*3)
+	nextCtx, nextCancel := context.WithTimeout(context.Background(), FetchTimeout)
 
 	defer nextCancel()
 
@@ -468,6 +473,37 @@ func (s *BaseCollectionStorage) GetManyByFilter(
 	}
 
 	return l, nil
+}
+
+// FindAllByFilter()
+func (s *BaseCollectionStorage) FindAllByFilter(
+	ctx context.Context,
+	filter interface{},
+	docs interface{},
+	opts ...*options.FindOptions,
+) error {
+	if err := s.runBeforeHooks(ctx, FindAllByFilterMethod); err != nil {
+		return err
+	}
+
+	defer s.runAfterHooks(ctx, FindAllByFilterMethod)
+
+	filterCtx, filterCancel := context.WithTimeout(ctx, FilterTimeout)
+	defer filterCancel()
+
+	cur, err := s.FindManyByFilter(filterCtx, filter, opts...)
+	if err != nil {
+		return err
+	}
+
+	closeCtx, closeCancel := context.WithTimeout(ctx, CloseCursorTimeout)
+	defer closeCancel()
+	defer cur.Close(closeCtx)
+
+	allCtx, allCancel := context.WithTimeout(context.Background(), FetchTimeout)
+	defer allCancel()
+
+	return cur.All(allCtx, docs)
 }
 
 // FindManyByFilter()
@@ -491,7 +527,7 @@ func (s *BaseCollectionStorage) FindManyByFilter(
 		return cur, nil
 	}
 
-	closeCtx, closeCancel := context.WithTimeout(ctx, time.Second*3)
+	closeCtx, closeCancel := context.WithTimeout(ctx, CloseCursorTimeout)
 	defer closeCancel()
 	defer cur.Close(closeCtx)
 

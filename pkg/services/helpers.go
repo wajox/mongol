@@ -8,15 +8,15 @@ import (
 
 // ObjectIDsFromStrArr - converts provided array of mongoid strings to ObjectID
 func ObjectIDsFromStrArr(idsRaw []string) ([]*primitive.ObjectID, error) {
-	var ids []*primitive.ObjectID
+	ids := make([]*primitive.ObjectID, len(idsRaw))
 
-	for i := range idsRaw {
+	for i := 0; i < cap(ids); i++ {
 		id, err := primitive.ObjectIDFromHex(idsRaw[i])
 		if err != nil {
 			return nil, fmt.Errorf("objectID conversion err: %s", err)
 		}
 
-		ids = append(ids, &id)
+		ids[i] = &id
 	}
 
 	return ids, nil

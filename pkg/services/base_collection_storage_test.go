@@ -281,13 +281,15 @@ var _ = Describe("BaseCollectionStorage", func() {
 				timecop.Freeze(curTime)
 				defer timecop.Return()
 
+				newTime := curTime.Unix() + 10
+
 				for _, id := range ids {
 					objID, _ := primitive.ObjectIDFromHex(id)
 					objectIDs = append(objectIDs, objID)
 				}
 
 				filter := bson.M{"_id": bson.M{"$in": objectIDs}}
-				update := bson.M{"$set": bson.M{"bm.updated_at": curTime.Unix()}}
+				update := bson.M{"$set": bson.M{"updated_at": newTime}}
 
 				res, err := storage.UpdateMany(
 					context.TODO(),
@@ -313,12 +315,45 @@ var _ = Describe("BaseCollectionStorage", func() {
 				Expect(err).To(BeNil())
 
 				for _, m := range l {
-					Expect(m.(*ExampleModel).UpdatedAt).To(Equal(curTime.Unix()))
+					Expect(m.(*ExampleModel).UpdatedAt).To(Equal(newTime))
 				}
 			})
 		})
 
-		Describe(".GetManByFilter()", func() {
+		Describe(".FindAllByFilter()", func() {
+			var (
+				m1, m2, m3 *ExampleModel
+				l          []*ExampleModel
+			)
+
+			BeforeEach(func() {
+				m1 = NewExampleModel()
+				m2 = NewExampleModel()
+				m3 = NewExampleModel()
+
+				storage.InsertOne(context.TODO(), m1)
+				storage.InsertOne(context.TODO(), m2)
+				storage.InsertOne(context.TODO(), m3)
+			})
+
+			AfterEach(func() {
+				storage.DeleteAll(context.TODO())
+			})
+
+			It("should return all models", func() {
+				err := storage.FindAllByFilter(
+					context.TODO(),
+					bson.M{},
+					&l,
+				)
+
+				Expect(err).To(BeNil())
+				Expect(l).NotTo(BeNil())
+				Expect(len(l)).To(Equal(3))
+			})
+		})
+
+		Describe(".GetManyByFilter()", func() {
 			var (
 				m1, m2, m3 *ExampleModel
 			)
