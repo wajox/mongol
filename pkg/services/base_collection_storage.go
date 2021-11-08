@@ -30,7 +30,10 @@ const (
 	DeleteManyByFilterMethod = "DeleteManyByFilter"
 	DeleteOneByIDMethod      = "DeleteOneByID"
 	DeleteAllMethod          = "DeleteAll"
+	CloseCursorTimeout       = time.Second * 1
+	FetchTimeout             = time.Second * 1
 	QueryTimeout             = time.Second * 1
+	FilterTimeout            = time.Second * 1
 )
 
 type Hook func(ctx context.Context) error
@@ -438,7 +441,7 @@ func (s *BaseCollectionStorage) GetManyByFilter(
 
 	defer s.runAfterHooks(ctx, GetManyByFilterMethod)
 
-	filterCtx, filterCancel := context.WithTimeout(ctx, QueryTimeout)
+	filterCtx, filterCancel := context.WithTimeout(ctx, FilterTimeout)
 	defer filterCancel()
 
 	cur, err := s.FindManyByFilter(filterCtx, filter, opts...)
@@ -446,13 +449,13 @@ func (s *BaseCollectionStorage) GetManyByFilter(
 		return nil, err
 	}
 
-	closeCtx, closeCancel := context.WithTimeout(ctx, QueryTimeout)
+	closeCtx, closeCancel := context.WithTimeout(ctx, CloseCursorTimeout)
 	defer closeCancel()
 	defer cur.Close(closeCtx)
 
 	var l []Document
 
-	nextCtx, nextCancel := context.WithTimeout(context.Background(), QueryTimeout)
+	nextCtx, nextCancel := context.WithTimeout(context.Background(), FetchTimeout)
 
 	defer nextCancel()
 
@@ -485,7 +488,7 @@ func (s *BaseCollectionStorage) FindAllByFilter(
 
 	defer s.runAfterHooks(ctx, FindAllByFilterMethod)
 
-	filterCtx, filterCancel := context.WithTimeout(ctx, QueryTimeout)
+	filterCtx, filterCancel := context.WithTimeout(ctx, FilterTimeout)
 	defer filterCancel()
 
 	cur, err := s.FindManyByFilter(filterCtx, filter, opts...)
@@ -493,11 +496,11 @@ func (s *BaseCollectionStorage) FindAllByFilter(
 		return err
 	}
 
-	closeCtx, closeCancel := context.WithTimeout(ctx, QueryTimeout)
+	closeCtx, closeCancel := context.WithTimeout(ctx, CloseCursorTimeout)
 	defer closeCancel()
 	defer cur.Close(closeCtx)
 
-	allCtx, allCancel := context.WithTimeout(context.Background(), QueryTimeout)
+	allCtx, allCancel := context.WithTimeout(context.Background(), FetchTimeout)
 	defer allCancel()
 
 	return cur.All(allCtx, docs)
@@ -524,7 +527,7 @@ func (s *BaseCollectionStorage) FindManyByFilter(
 		return cur, nil
 	}
 
-	closeCtx, closeCancel := context.WithTimeout(ctx, QueryTimeout)
+	closeCtx, closeCancel := context.WithTimeout(ctx, CloseCursorTimeout)
 	defer closeCancel()
 	defer cur.Close(closeCtx)
 
