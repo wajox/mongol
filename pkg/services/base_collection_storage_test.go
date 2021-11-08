@@ -353,7 +353,7 @@ var _ = Describe("BaseCollectionStorage", func() {
 			})
 		})
 
-		Describe(".GetManByFilter()", func() {
+		Describe(".GetManyByFilter()", func() {
 			var (
 				m1, m2, m3 *ExampleModel
 			)
