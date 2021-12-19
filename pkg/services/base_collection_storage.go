@@ -498,6 +498,19 @@ func (s *BaseCollectionStorage) FindManyByFilter(
 	return nil, cur.Err()
 }
 
+// CountByFilter
+func (s *BaseCollectionStorage) CountByFilter(
+	ctx context.Context,
+	filter interface{},
+) (int64, error) {
+	opts := options.Count().SetMaxTime(2 * time.Second)
+	return s.GetCollection().CountDocuments(
+		context.TODO(),
+		filter,
+		opts,
+	)
+}
+
 // DeleteManyByFilter() documents by given filters
 func (s *BaseCollectionStorage) DeleteManyByFilter(
 	ctx context.Context,

@@ -2,7 +2,7 @@ language: go
 env:
   - GO111MODULE=on
 go:
-  - 1.15.x
+  - 1.16.x
 services:
   - mongodb
 before_install:
@@ -14,5 +14,4 @@ install:
 script:
   - ./bin/golangci-lint run
   - MONGODB_URI=mongodb://127.0.0.1:27017 go test -a -v ./...
-notifications:
-  slack: rekamarket:v5VZTL98YcxsN0EcdjLnnR0P
+

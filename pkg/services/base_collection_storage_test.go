@@ -352,6 +352,36 @@ var _ = Describe("BaseCollectionStorage", func() {
 			})
 		})
 
+		Describe(".CountByFilter()", func() {
+			var (
+				m1, m2, m3 *ExampleModel
+			)
+
+			BeforeEach(func() {
+				m1 = NewExampleModel()
+				m2 = NewExampleModel()
+				m3 = NewExampleModel()
+
+				storage.InsertOne(context.TODO(), m1)
+				storage.InsertOne(context.TODO(), m2)
+				storage.InsertOne(context.TODO(), m3)
+			})
+
+			AfterEach(func() {
+				storage.DeleteAll(context.TODO())
+			})
+
+			It("should return count of documents", func() {
+				count, err := storage.CountByFilter(
+					context.TODO(),
+					bson.M{},
+				)
+
+				Expect(err).To(BeNil())
+				Expect(count).To(Equal(int64(3)))
+			})
+		})
+
 		Describe(".DeleteManyByFilter()", func() {
 			var (
 				m1, m2, m3 *ExampleModel
