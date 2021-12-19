@@ -1,5 +1,7 @@
 # Mongol
 
+[![Go Reference](https://pkg.go.dev/badge/github.com/wajox/mongol.svg)](https://pkg.go.dev/github.com/wajox/mongol)
+
 ## Model Example
 ```golang
 type ExampleModel struct {
