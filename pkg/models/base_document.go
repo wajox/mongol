@@ -2,7 +2,7 @@ package models
 
 import (
 	timecop "github.com/bluele/go-timecop"
-	bs "github.com/wajox/mongol/pkg/services"
+	"github.com/wajox/mongol/pkg/helpers"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -25,9 +25,9 @@ func (m *BaseDocument) GetHexID() string {
 
 // SetHexID() sets ID of the document from the hex-string
 func (m *BaseDocument) SetHexID(hexID string) error {
-	oid, err := primitive.ObjectIDFromHex(hexID)
+	oid, err := helpers.StringToObjectID(hexID)
 	if err != nil {
-		return bs.ErrInvalidObjectID
+		return err
 	}
 
 	m.ID = oid
