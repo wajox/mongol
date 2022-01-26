@@ -5,7 +5,7 @@
 ## Model Example
 ```golang
 type ExampleModel struct {
-	models.BaseDocument `bson:",inline"`
+	mongol.BaseDocument `bson:",inline"`
 
     // Default fields from BaseDocument
     //
