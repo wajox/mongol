@@ -1,4 +1,4 @@
-package services_test
+package mongol_test
 
 import (
 	"context"
@@ -12,12 +12,11 @@ import (
 
 	timecop "github.com/bluele/go-timecop"
 	"github.com/google/uuid"
-	"github.com/wajox/mongol/pkg/models"
-	. "github.com/wajox/mongol/pkg/services"
+	. "github.com/wajox/mongol"
 )
 
 type ExampleModel struct {
-	models.BaseDocument `bson:",inline"`
+	BaseDocument `bson:",inline"`
 
 	Title string `json:"title,omitempty" bson:"title,omitempty"`
 }
@@ -27,10 +26,10 @@ func NewExampleModel() *ExampleModel {
 }
 
 // nolint
-var _ = Describe("BaseCollectionStorage", func() {
+var _ = Describe("BaseCollection", func() {
 	var (
 		mongoURI, mongoDBName, mongoCollectionName string
-		storage                                    *BaseCollectionStorage
+		storage                                    *BaseCollection
 		connErr                                    error
 	)
 
@@ -42,7 +41,7 @@ var _ = Describe("BaseCollectionStorage", func() {
 		mongoDBName = "base_models_db_test"
 		mongoCollectionName = "base_models_test"
 
-		storage, connErr = NewBaseCollectionStorage(context.TODO(), mongoURI, mongoDBName, mongoCollectionName)
+		storage, connErr = NewBaseCollection(context.TODO(), mongoURI, mongoDBName, mongoCollectionName)
 
 		if connErr != nil {
 			GinkgoT().Fatal(connErr)

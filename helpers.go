@@ -1,4 +1,4 @@
-package services
+package mongol
 
 import (
 	"fmt"
@@ -29,4 +29,13 @@ func IsValidMongoID(id string) bool {
 	}
 
 	return true
+}
+
+func StringToObjectID(hexID string) (primitive.ObjectID, error) {
+	oid, err := primitive.ObjectIDFromHex(hexID)
+	if err != nil {
+		return primitive.ObjectID{}, ErrInvalidObjectID
+	}
+
+	return oid, nil
 }
