@@ -36,12 +36,19 @@ const (
 	FilterTimeout            = time.Second * 1
 )
 
+var (
+	_ Storage = (*BaseCollectionStorage)(nil)
+)
+
+// Hook
 type Hook func(ctx context.Context) error
 
+// Client
 type Client struct {
 	mongoClient *mongo.Client
 }
 
+// GetMongoClient
 func (c *Client) GetMongoClient() *mongo.Client {
 	return c.mongoClient
 }
