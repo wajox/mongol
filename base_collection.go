@@ -1,4 +1,4 @@
-package services
+package mongol
 
 import (
 	"context"
@@ -37,7 +37,7 @@ const (
 )
 
 var (
-	_ Storage = (*BaseCollectionStorage)(nil)
+	_ Storage = (*BaseCollection)(nil)
 )
 
 // Hook
@@ -53,8 +53,8 @@ func (c *Client) GetMongoClient() *mongo.Client {
 	return c.mongoClient
 }
 
-// BaseCollectionStorage
-type BaseCollectionStorage struct {
+// BaseCollection
+type BaseCollection struct {
 	Client         *Client
 	DBName         string
 	CollectionName string
@@ -80,18 +80,18 @@ func NewClient(ctx context.Context, mongoURI string) (*Client, error) {
 	return &Client{mongoClient: c}, nil
 }
 
-// NewBaseCollectionStorage() is a constructor for BaseCollectionStorage struct
-func NewBaseCollectionStorage(ctx context.Context, mongoURI, dbName, collectionName string) (*BaseCollectionStorage, error) {
+// NewBaseCollection() is a constructor for BaseCollection struct
+func NewBaseCollection(ctx context.Context, mongoURI, dbName, collectionName string) (*BaseCollection, error) {
 	client, err := NewClient(ctx, mongoURI)
 	if err != nil {
 		return nil, err
 	}
 
-	return NewBaseCollectionStorageWithClient(client, dbName, collectionName), nil
+	return NewBaseCollectionWithClient(client, dbName, collectionName), nil
 }
 
-func NewBaseCollectionStorageWithClient(client *Client, dbName, collectionName string) *BaseCollectionStorage {
-	return &BaseCollectionStorage{
+func NewBaseCollectionWithClient(client *Client, dbName, collectionName string) *BaseCollection {
+	return &BaseCollection{
 		Client:         client,
 		DBName:         dbName,
 		CollectionName: collectionName,
@@ -100,7 +100,7 @@ func NewBaseCollectionStorageWithClient(client *Client, dbName, collectionName s
 	}
 }
 
-func (s *BaseCollectionStorage) runBeforeHooks(ctx context.Context, methodName string) error {
+func (s *BaseCollection) runBeforeHooks(ctx context.Context, methodName string) error {
 	hooks, ok := s.BeforeHooks[methodName]
 	if !ok {
 		return nil
@@ -115,7 +115,7 @@ func (s *BaseCollectionStorage) runBeforeHooks(ctx context.Context, methodName s
 	return nil
 }
 
-func (s *BaseCollectionStorage) runAfterHooks(ctx context.Context, methodName string) error {
+func (s *BaseCollection) runAfterHooks(ctx context.Context, methodName string) error {
 	hooks, ok := s.AfterHooks[methodName]
 	if !ok {
 		return nil
@@ -130,7 +130,7 @@ func (s *BaseCollectionStorage) runAfterHooks(ctx context.Context, methodName st
 	return nil
 }
 
-func (s *BaseCollectionStorage) AddBeforeHook(methodName string, h Hook) {
+func (s *BaseCollection) AddBeforeHook(methodName string, h Hook) {
 	if _, ok := s.BeforeHooks[methodName]; !ok {
 		s.BeforeHooks[methodName] = []Hook{}
 	}
@@ -138,7 +138,7 @@ func (s *BaseCollectionStorage) AddBeforeHook(methodName string, h Hook) {
 	s.BeforeHooks[methodName] = append(s.BeforeHooks[methodName], h)
 }
 
-func (s *BaseCollectionStorage) AddAfterHook(methodName string, h Hook) {
+func (s *BaseCollection) AddAfterHook(methodName string, h Hook) {
 	if _, ok := s.AfterHooks[methodName]; !ok {
 		s.AfterHooks[methodName] = []Hook{}
 	}
@@ -147,16 +147,16 @@ func (s *BaseCollectionStorage) AddAfterHook(methodName string, h Hook) {
 }
 
 // Ping() the mongo server
-func (s *BaseCollectionStorage) Ping(ctx context.Context) error {
+func (s *BaseCollection) Ping(ctx context.Context) error {
 	return s.Client.GetMongoClient().Ping(ctx, nil)
 }
 
 // GetCollection() returns storage collection
-func (s *BaseCollectionStorage) GetCollection() *mongo.Collection {
+func (s *BaseCollection) GetCollection() *mongo.Collection {
 	return s.Client.GetMongoClient().Database(s.DBName).Collection(s.CollectionName)
 }
 
-func (s *BaseCollectionStorage) CreateIndex(ctx context.Context, k interface{}, o *options.IndexOptions) (string, error) {
+func (s *BaseCollection) CreateIndex(ctx context.Context, k interface{}, o *options.IndexOptions) (string, error) {
 	if err := s.runBeforeHooks(ctx, CreateIndexMethod); err != nil {
 		return "", err
 	}
@@ -170,7 +170,7 @@ func (s *BaseCollectionStorage) CreateIndex(ctx context.Context, k interface{}, 
 }
 
 // InsertOne() inserts given Document and returns an ID of inserted document
-func (s *BaseCollectionStorage) InsertOne(ctx context.Context, m Document, opts ...*options.InsertOneOptions) (string, error) {
+func (s *BaseCollection) InsertOne(ctx context.Context, m Document, opts ...*options.InsertOneOptions) (string, error) {
 	if err := s.runBeforeHooks(ctx, InsertOneMethod); err != nil {
 		return "", err
 	}
@@ -202,7 +202,7 @@ func (s *BaseCollectionStorage) InsertOne(ctx context.Context, m Document, opts 
 }
 
 // InsertMany()
-func (s *BaseCollectionStorage) InsertMany(ctx context.Context, docs []interface{}, opts ...*options.InsertManyOptions) ([]string, error) {
+func (s *BaseCollection) InsertMany(ctx context.Context, docs []interface{}, opts ...*options.InsertManyOptions) ([]string, error) {
 	if err := s.runBeforeHooks(ctx, InsertManyMethod); err != nil {
 		return []string{}, err
 	}
@@ -230,7 +230,7 @@ func (s *BaseCollectionStorage) InsertMany(ctx context.Context, docs []interface
 }
 
 // UpdateOne() updates given Document
-func (s *BaseCollectionStorage) UpdateOne(ctx context.Context, m Document, opts ...*options.UpdateOptions) error {
+func (s *BaseCollection) UpdateOne(ctx context.Context, m Document, opts ...*options.UpdateOptions) error {
 	if err := s.runBeforeHooks(ctx, UpdateOneMethod); err != nil {
 		return err
 	}
@@ -241,7 +241,7 @@ func (s *BaseCollectionStorage) UpdateOne(ctx context.Context, m Document, opts 
 }
 
 // UpdateByFilter() updates given Document according to provided filter
-func (s *BaseCollectionStorage) UpdateManyByFilter(ctx context.Context, filter interface{}, m Document, opts ...*options.UpdateOptions) error {
+func (s *BaseCollection) UpdateManyByFilter(ctx context.Context, filter interface{}, m Document, opts ...*options.UpdateOptions) error {
 	if err := s.runBeforeHooks(ctx, UpdateManyByFilterMethod); err != nil {
 		return err
 	}
@@ -271,7 +271,7 @@ func (s *BaseCollectionStorage) UpdateManyByFilter(ctx context.Context, filter i
 }
 
 // UpdateMany()
-func (s *BaseCollectionStorage) UpdateMany(
+func (s *BaseCollection) UpdateMany(
 	ctx context.Context,
 	filter, update interface{},
 	opts ...*options.UpdateOptions,
@@ -291,7 +291,7 @@ func (s *BaseCollectionStorage) UpdateMany(
 }
 
 // UpsertOne - insert or update existing record. Returns updated model.
-func (s *BaseCollectionStorage) UpsertOne(
+func (s *BaseCollection) UpsertOne(
 	ctx context.Context,
 	filter interface{},
 	update bson.M,
@@ -329,7 +329,7 @@ func (s *BaseCollectionStorage) UpsertOne(
 }
 
 // ReplaceOne
-func (s *BaseCollectionStorage) ReplaceOne(
+func (s *BaseCollection) ReplaceOne(
 	ctx context.Context,
 	filter interface{},
 	m Document,
@@ -352,7 +352,7 @@ func (s *BaseCollectionStorage) ReplaceOne(
 }
 
 // ReplaceOneByID()
-func (s *BaseCollectionStorage) ReplaceOneByID(
+func (s *BaseCollection) ReplaceOneByID(
 	ctx context.Context,
 	recordID string,
 	m Document,
@@ -378,7 +378,7 @@ func (s *BaseCollectionStorage) ReplaceOneByID(
 }
 
 // GetOneByID() is trying to find Document by given recordID
-func (s *BaseCollectionStorage) GetOneByID(
+func (s *BaseCollection) GetOneByID(
 	ctx context.Context,
 	recordID string,
 	m Document,
@@ -401,7 +401,7 @@ func (s *BaseCollectionStorage) GetOneByID(
 }
 
 // GetOneByFilter() is trying to find Document by provided filter
-func (s *BaseCollectionStorage) GetOneByFilter(
+func (s *BaseCollection) GetOneByFilter(
 	ctx context.Context,
 	filter interface{},
 	m Document,
@@ -436,7 +436,7 @@ func (s *BaseCollectionStorage) GetOneByFilter(
 }
 
 // GetManyByFilter()
-func (s *BaseCollectionStorage) GetManyByFilter(
+func (s *BaseCollection) GetManyByFilter(
 	ctx context.Context,
 	filter interface{},
 	modelBuilder func() Document,
@@ -483,7 +483,7 @@ func (s *BaseCollectionStorage) GetManyByFilter(
 }
 
 // FindAllByFilter()
-func (s *BaseCollectionStorage) FindAllByFilter(
+func (s *BaseCollection) FindAllByFilter(
 	ctx context.Context,
 	filter interface{},
 	docs interface{},
@@ -514,7 +514,7 @@ func (s *BaseCollectionStorage) FindAllByFilter(
 }
 
 // FindManyByFilter()
-func (s *BaseCollectionStorage) FindManyByFilter(
+func (s *BaseCollection) FindManyByFilter(
 	ctx context.Context,
 	filter interface{},
 	opts ...*options.FindOptions,
@@ -542,7 +542,7 @@ func (s *BaseCollectionStorage) FindManyByFilter(
 }
 
 // CountByFilter
-func (s *BaseCollectionStorage) CountByFilter(
+func (s *BaseCollection) CountByFilter(
 	ctx context.Context,
 	filter interface{},
 ) (int64, error) {
@@ -555,7 +555,7 @@ func (s *BaseCollectionStorage) CountByFilter(
 }
 
 // DeleteManyByFilter() documents by given filters
-func (s *BaseCollectionStorage) DeleteManyByFilter(
+func (s *BaseCollection) DeleteManyByFilter(
 	ctx context.Context,
 	filter interface{},
 	opts ...*options.DeleteOptions,
@@ -569,7 +569,7 @@ func (s *BaseCollectionStorage) DeleteManyByFilter(
 }
 
 // DeleteOneByID() deletes document by given ID
-func (s *BaseCollectionStorage) DeleteOneByID(ctx context.Context, docID string) error {
+func (s *BaseCollection) DeleteOneByID(ctx context.Context, docID string) error {
 	if err := s.runBeforeHooks(ctx, DeleteOneByIDMethod); err != nil {
 		return err
 	}
@@ -592,7 +592,7 @@ func (s *BaseCollectionStorage) DeleteOneByID(ctx context.Context, docID string)
 }
 
 // DropAll() deletes collection from database
-func (s *BaseCollectionStorage) DeleteAll(ctx context.Context) error {
+func (s *BaseCollection) DeleteAll(ctx context.Context) error {
 	if err := s.runBeforeHooks(ctx, DeleteAllMethod); err != nil {
 		return err
 	}

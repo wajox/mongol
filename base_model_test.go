@@ -1,4 +1,4 @@
-package models_test
+package mongol_test
 
 import (
 	"time"
@@ -7,7 +7,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	timecop "github.com/bluele/go-timecop"
-	. "github.com/wajox/mongol/pkg/models"
+	. "github.com/wajox/mongol"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 

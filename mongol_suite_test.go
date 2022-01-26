@@ -1,4 +1,4 @@
-package services_test
+package mongol_test
 
 import (
 	"testing"
@@ -7,7 +7,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestServices(t *testing.T) {
+func TestMongol(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Services Suite")
+	RunSpecs(t, "Mongol Suite")
 }

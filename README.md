@@ -19,7 +19,7 @@ type ExampleModel struct {
 
 ## Storage usage example
 ```golang
-storage, connErr = NewBaseCollectionStorage(context.TODO(), mongoURI, mongoDBName, mongoCollectionName)
+storage, connErr = NewBaseCollection(context.TODO(), mongoURI, mongoDBName, mongoCollectionName)
 
 m := &ExampleModel{}
 
