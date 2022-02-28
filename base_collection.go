@@ -68,7 +68,8 @@ type Document interface {
 	GetHexID() string
 	SetHexID(hexID string) error
 	SetJSONID(jsonB []byte) error
-	SetupTimestamps()
+	SetupCreatedAt()
+	SetupUpdatedAt()
 }
 
 func NewClient(ctx context.Context, mongoURI string) (*Client, error) {
@@ -176,7 +177,8 @@ func (s *BaseCollection) InsertOne(ctx context.Context, m Document, opts ...*opt
 	}
 	defer s.runAfterHooks(ctx, InsertOneMethod)
 
-	m.SetupTimestamps()
+	m.SetupCreatedAt()
+	m.SetupUpdatedAt()
 
 	b, err := bson.Marshal(m)
 	if err != nil {
@@ -247,7 +249,7 @@ func (s *BaseCollection) UpdateManyByFilter(ctx context.Context, filter interfac
 	}
 	defer s.runAfterHooks(ctx, UpdateManyByFilterMethod)
 
-	m.SetupTimestamps()
+	m.SetupUpdatedAt()
 
 	res, err := s.GetCollection().UpdateOne(
 		ctx,
@@ -341,7 +343,7 @@ func (s *BaseCollection) ReplaceOne(
 
 	defer s.runAfterHooks(ctx, ReplaceOneMethod)
 
-	m.SetupTimestamps()
+	m.SetupUpdatedAt()
 
 	return s.GetCollection().ReplaceOne(
 		ctx,

@@ -63,7 +63,7 @@ var _ = Describe("BaseCollection", func() {
 		Describe("save & find methods", func() {
 			Describe(".InsertOne()", func() {
 				It("should create new model", func() {
-					curTime := time.Now().Add(time.Hour * 1)
+					curTime := time.Now().UTC().Add(time.Hour * 1)
 
 					timecop.Freeze(curTime)
 					defer timecop.Return()
@@ -72,8 +72,8 @@ var _ = Describe("BaseCollection", func() {
 
 					id, saveErr := storage.InsertOne(context.TODO(), m)
 
-					Expect(m.CreatedAt).To(Equal(curTime.Unix()))
-					Expect(m.UpdatedAt).To(Equal(curTime.Unix()))
+					Expect(m.CreatedAt).To(Equal(curTime))
+					Expect(m.UpdatedAt).To(Equal(curTime))
 
 					findErr := storage.GetOneByID(context.TODO(), id, m)
 
@@ -82,8 +82,8 @@ var _ = Describe("BaseCollection", func() {
 					Expect(saveErr).To(BeNil())
 					Expect(findErr).To(BeNil())
 
-					Expect(m.CreatedAt).To(Equal(curTime.Unix()))
-					Expect(m.UpdatedAt).To(Equal(curTime.Unix()))
+					Expect(m.CreatedAt.Unix()).To(Equal(curTime.Unix()))
+					Expect(m.UpdatedAt.Unix()).To(Equal(curTime.Unix()))
 				})
 			})
 
@@ -112,7 +112,7 @@ var _ = Describe("BaseCollection", func() {
 					It("should update the model", func() {
 						emptyModel := &ExampleModel{}
 
-						curTime := time.Now().Add(time.Hour * 1)
+						curTime := time.Now().UTC().Add(time.Hour * 1)
 
 						timecop.Freeze(curTime)
 						defer timecop.Return()
@@ -128,8 +128,8 @@ var _ = Describe("BaseCollection", func() {
 						Expect(findErr).To(BeNil())
 
 						Expect(emptyModel.Title).To(Equal(newTitle))
-						Expect(emptyModel.CreatedAt).NotTo(Equal(curTime.Unix()))
-						Expect(emptyModel.UpdatedAt).To(Equal(curTime.Unix()))
+						Expect(emptyModel.CreatedAt.Unix()).NotTo(Equal(curTime.Unix()))
+						Expect(emptyModel.UpdatedAt.Unix()).To(Equal(curTime.Unix()))
 					})
 				})
 
@@ -137,7 +137,7 @@ var _ = Describe("BaseCollection", func() {
 					It("should update the model", func() {
 						emptyModel := &ExampleModel{}
 
-						curTime := time.Now().Add(time.Hour * 1)
+						curTime := time.Now().UTC().Add(time.Hour * 1)
 
 						timecop.Freeze(curTime)
 						defer timecop.Return()
@@ -154,8 +154,8 @@ var _ = Describe("BaseCollection", func() {
 						Expect(findErr).To(BeNil())
 
 						Expect(emptyModel.Title).To(Equal(newTitle))
-						Expect(emptyModel.CreatedAt).NotTo(Equal(curTime.Unix()))
-						Expect(emptyModel.UpdatedAt).To(Equal(curTime.Unix()))
+						Expect(emptyModel.CreatedAt.Unix()).NotTo(Equal(curTime.Unix()))
+						Expect(emptyModel.UpdatedAt.Unix()).To(Equal(curTime.Unix()))
 					})
 				})
 
@@ -163,7 +163,7 @@ var _ = Describe("BaseCollection", func() {
 					It("should update the model", func() {
 						emptyModel := &ExampleModel{}
 
-						curTime := time.Now().Add(time.Hour * 1)
+						curTime := time.Now().UTC().Add(time.Hour * 1)
 
 						timecop.Freeze(curTime)
 						defer timecop.Return()
@@ -178,8 +178,8 @@ var _ = Describe("BaseCollection", func() {
 						Expect(updateRes.ModifiedCount).To(Equal(int64(1)))
 						Expect(findErr).To(BeNil())
 						Expect(emptyModel.Title).To(Equal(newTitle))
-						Expect(emptyModel.CreatedAt).NotTo(Equal(curTime.Unix()))
-						Expect(emptyModel.UpdatedAt).To(Equal(curTime.Unix()))
+						Expect(emptyModel.CreatedAt.Unix()).NotTo(Equal(curTime.Unix()))
+						Expect(emptyModel.UpdatedAt.Unix()).To(Equal(curTime.Unix()))
 					})
 				})
 			})
@@ -219,7 +219,7 @@ var _ = Describe("BaseCollection", func() {
 
 		Describe(".InsertMany()", func() {
 			It("should insert many records", func() {
-				curTime := time.Now().Add(time.Hour * 1)
+				curTime := time.Now().UTC().Add(time.Hour * 1)
 
 				timecop.Freeze(curTime)
 				defer timecop.Return()
@@ -231,7 +231,8 @@ var _ = Describe("BaseCollection", func() {
 				}
 
 				for i, _ := range docs {
-					docs[i].(*ExampleModel).SetupTimestamps()
+					docs[i].(*ExampleModel).SetupCreatedAt()
+					docs[i].(*ExampleModel).SetupUpdatedAt()
 				}
 
 				ids, err := storage.InsertMany(context.TODO(), docs)
@@ -245,8 +246,8 @@ var _ = Describe("BaseCollection", func() {
 
 					Expect(findErr).To(BeNil())
 
-					Expect(emptyModel.CreatedAt).To(Equal(curTime.Unix()))
-					Expect(emptyModel.UpdatedAt).To(Equal(curTime.Unix()))
+					Expect(emptyModel.CreatedAt.Unix()).To(Equal(curTime.Unix()))
+					Expect(emptyModel.UpdatedAt.Unix()).To(Equal(curTime.Unix()))
 				}
 			})
 		})
@@ -260,7 +261,7 @@ var _ = Describe("BaseCollection", func() {
 			)
 
 			BeforeEach(func() {
-				curTime = time.Now().Add(time.Hour * 1)
+				curTime = time.Now().UTC().Add(time.Hour * 1)
 				docs = []interface{}{
 					NewExampleModel(),
 					NewExampleModel(),
@@ -269,7 +270,8 @@ var _ = Describe("BaseCollection", func() {
 
 				timecop.Freeze(curTime)
 				for i, _ := range docs {
-					docs[i].(*ExampleModel).SetupTimestamps()
+					docs[i].(*ExampleModel).SetupCreatedAt()
+					docs[i].(*ExampleModel).SetupUpdatedAt()
 				}
 				timecop.Return()
 
@@ -280,7 +282,7 @@ var _ = Describe("BaseCollection", func() {
 				timecop.Freeze(curTime)
 				defer timecop.Return()
 
-				newTime := curTime.Unix() + 10
+				newTime := curTime.Add(time.Second * 10)
 
 				for _, id := range ids {
 					objID, _ := primitive.ObjectIDFromHex(id)
@@ -314,7 +316,7 @@ var _ = Describe("BaseCollection", func() {
 				Expect(err).To(BeNil())
 
 				for _, m := range l {
-					Expect(m.(*ExampleModel).UpdatedAt).To(Equal(newTime))
+					Expect(m.(*ExampleModel).UpdatedAt.Unix()).To(Equal(newTime.Unix()))
 				}
 			})
 		})
