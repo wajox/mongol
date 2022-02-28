@@ -1,6 +1,8 @@
 package mongol
 
 import (
+	"time"
+
 	timecop "github.com/bluele/go-timecop"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -8,8 +10,8 @@ import (
 // BaseDocument
 type BaseDocument struct {
 	ID        primitive.ObjectID `json:"id,omitempty" bson:"_id,omitempty"`
-	CreatedAt int64              `json:"created_at" bson:"created_at"`
-	UpdatedAt int64              `json:"updated_at" bson:"updated_at"`
+	CreatedAt time.Time          `json:"created_at" bson:"created_at"`
+	UpdatedAt time.Time          `json:"updated_at" bson:"updated_at"`
 }
 
 // GetID() returns ID of the document
@@ -34,15 +36,18 @@ func (m *BaseDocument) SetHexID(hexID string) error {
 	return nil
 }
 
-// Setuptimestamps() sets CreatedAt and UpdatedAt fields for the model
+// SetupCreatedAt() sets CreatedAt field for the model
 // The method does not store any data to database
 // you should use the method before InsertMany(), UpdateMany() requests from you storage
-func (m *BaseDocument) SetupTimestamps() {
-	if m.CreatedAt == 0 {
-		m.CreatedAt = timecop.Now().Unix()
-	}
+func (m *BaseDocument) SetupCreatedAt() {
+	m.CreatedAt = timecop.Now().UTC()
+}
 
-	m.UpdatedAt = timecop.Now().Unix()
+// SetupUpdatedAt() sets UpdatedAt field for the model
+// The method does not store any data to database
+// you should use the method before InsertMany(), UpdateMany() requests from you storage
+func (m *BaseDocument) SetupUpdatedAt() {
+	m.UpdatedAt = timecop.Now().UTC()
 }
 
 // SetJSONID() sets the model ID from given JSON

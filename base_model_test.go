@@ -56,34 +56,35 @@ var _ = Describe("BaseDocument", func() {
 			Describe("SetupTimestamps()", func() {
 				Context("when created_at and updated_at are empty", func() {
 					It("should set created_at, updated_at to current time", func() {
-						timecop.Freeze(time.Now().Add(time.Hour * 1))
+						timecop.Freeze(time.Now().UTC().Add(time.Hour * 1))
 						defer timecop.Return()
 
-						m.SetupTimestamps()
+						m.SetupCreatedAt()
+						m.SetupUpdatedAt()
 
-						Expect(m.CreatedAt).To(Equal(timecop.Now().Unix()))
-						Expect(m.UpdatedAt).To(Equal(timecop.Now().Unix()))
+						Expect(m.CreatedAt).To(Equal(timecop.Now().UTC()))
+						Expect(m.UpdatedAt).To(Equal(timecop.Now().UTC()))
 					})
 				})
 
 				Context("when created_at is not empty", func() {
 					var (
-						prevCreatedAt int64
+						prevCreatedAt time.Time
 					)
 					BeforeEach(func() {
-						prevCreatedAt = timecop.Now().Unix()
+						prevCreatedAt = timecop.Now().UTC()
 						m.CreatedAt = prevCreatedAt
-						m.UpdatedAt = 0
+						m.UpdatedAt = timecop.Now().UTC()
 					})
 
 					It("should update only updated_at field", func() {
-						timecop.Freeze(time.Now().Add(time.Hour * 1))
+						timecop.Freeze(time.Now().UTC().Add(time.Hour * 1))
 						defer timecop.Return()
 
-						m.SetupTimestamps()
+						m.SetupUpdatedAt()
 
 						Expect(m.CreatedAt).To(Equal(prevCreatedAt))
-						Expect(m.UpdatedAt).To(Equal(timecop.Now().Unix()))
+						Expect(m.UpdatedAt).To(Equal(timecop.Now().UTC()))
 					})
 				})
 			})
