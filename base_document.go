@@ -10,8 +10,8 @@ import (
 // BaseDocument
 type BaseDocument struct {
 	ID        primitive.ObjectID `json:"id,omitempty" bson:"_id,omitempty"`
-	CreatedAt time.Time          `json:"created_at" bson:"created_at"`
-	UpdatedAt time.Time          `json:"updated_at" bson:"updated_at"`
+	CreatedAt time.Time          `json:"created_at" bson:"created_at,omitempty"`
+	UpdatedAt time.Time          `json:"updated_at" bson:"updated_at,omitempty"`
 }
 
 // GetID() returns ID of the document
