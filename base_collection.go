@@ -292,6 +292,42 @@ func (s *BaseCollection) UpdateMany(
 	)
 }
 
+// FindAndUpdate - find and update existing record. Returns updated model.
+func (s *BaseCollection) FindAndUpdateOne(
+	ctx context.Context,
+	filter interface{},
+	update bson.M,
+	m Document,
+) (Document, error) {
+	if err := s.runBeforeHooks(ctx, UpsertOneMethod); err != nil {
+		return nil, err
+	}
+
+	defer s.runAfterHooks(ctx, UpsertOneMethod)
+
+	opts := options.FindOneAndUpdate().SetReturnDocument(options.After)
+
+	res := s.GetCollection().FindOneAndUpdate(ctx, filter, update, opts)
+	if err := res.Decode(m); err != nil {
+		if res.Err() == mongo.ErrNoDocuments {
+			return nil, ErrDocumentNotFound
+		}
+
+		return nil, err
+	}
+
+	b, err := res.DecodeBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	if err := m.SetJSONID(b.Lookup(CollectionIDKey).Value); err != nil {
+		return nil, err
+	}
+
+	return m, nil
+}
+
 // UpsertOne - insert or update existing record. Returns updated model.
 func (s *BaseCollection) UpsertOne(
 	ctx context.Context,
