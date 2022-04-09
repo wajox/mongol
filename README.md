@@ -6,12 +6,11 @@
 ```golang
 type ExampleModel struct {
 	mongol.BaseDocument `bson:",inline"`
-
-    // Default fields from BaseDocument
-    //
+	// Default fields from BaseDocument
+	//
 	// ID        primitive.ObjectID `json:"id,omitempty" bson:"_id,omitempty"`
-	// CreatedAt int64              `json:"created_at" bson:"created_at"`
-	// UpdatedAt int64              `json:"updated_at" bson:"updated_at"`
+	// CreatedAt time.Time          `json:"created_at" bson:"created_at"`
+	// UpdatedAt time.Time          `json:"updated_at" bson:"updated_at"`
 
 	Title string `json:"title,omitempty" bson:"title,omitempty"`
 }
