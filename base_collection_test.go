@@ -519,7 +519,7 @@ var _ = Describe("BaseCollection", func() {
 			})
 		})
 
-		Describe(".UpsertRecord()", func() {
+		Describe(".UpsertOne()", func() {
 			var (
 				m1    *ExampleModel
 				docID string
@@ -570,6 +570,53 @@ var _ = Describe("BaseCollection", func() {
 				findErr = storage.GetOneByID(context.TODO(), docID, findRes)
 				Expect(findErr).To(BeNil())
 				Expect(findRes).To(Equal(upsertedModel))
+			})
+		})
+
+		Describe(".FindAndUpdateOne()", func() {
+			var (
+				m1    *ExampleModel
+				docID string
+			)
+
+			BeforeEach(func() {
+				m1 = NewExampleModel()
+
+				insertedID, err := storage.InsertOne(context.TODO(), m1)
+				Expect(err).To(BeNil())
+
+				docID = insertedID
+			})
+
+			AfterEach(func() {
+				storage.DeleteAll(context.TODO())
+			})
+
+			It("should update model when it exists", func() {
+				ctx := context.Background()
+				filter := bson.M{"_id": m1.BaseDocument.ID}
+				update := bson.M{
+					"$set": bson.M{
+						"title": m1.Title,
+					},
+				}
+
+				update = bson.M{
+					"$set": bson.M{
+						"title": m1.Title + "updated",
+					},
+				}
+
+				/* update existing record */
+				updatedModel, err := storage.FindAndUpdateOne(ctx, filter, update, &ExampleModel{})
+				Expect(err).To(BeNil())
+
+				Expect(updatedModel.(*ExampleModel).Title).To(Equal(m1.Title + "updated"))
+
+				findRes := &ExampleModel{}
+				findErr := storage.GetOneByID(context.TODO(), docID, findRes)
+				Expect(findErr).To(BeNil())
+				Expect(findRes).To(Equal(updatedModel))
 			})
 		})
 	})

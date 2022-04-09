@@ -13,7 +13,9 @@ type Storage interface {
 	AddBeforeHook(methodName string, h Hook)
 	AddAfterHook(methodName string, h Hook)
 	Ping(ctx context.Context) error
-	GetCollection() *mongo.Collection
+	Collection() *mongo.Collection
+	Database() *mongo.Database
+	MongoClient() *mongo.Client
 	CreateIndex(ctx context.Context, k interface{}, o *options.IndexOptions) (string, error)
 	InsertOne(ctx context.Context, m Document, opts ...*options.InsertOneOptions) (string, error)
 	InsertMany(ctx context.Context, docs []interface{}, opts ...*options.InsertManyOptions) ([]string, error)
@@ -21,6 +23,7 @@ type Storage interface {
 	UpdateManyByFilter(ctx context.Context, filter interface{}, m Document, opts ...*options.UpdateOptions) error
 	UpdateMany(ctx context.Context, filter, update interface{}, opts ...*options.UpdateOptions) (*mongo.UpdateResult, error)
 	UpsertOne(ctx context.Context, filter interface{}, update bson.M, m Document) (Document, error)
+	FindAndUpdateOne(ctx context.Context, filter interface{}, update bson.M, m Document) (Document, error)
 	ReplaceOne(ctx context.Context, filter interface{}, m Document, opts ...*options.ReplaceOptions) (*mongo.UpdateResult, error)
 	ReplaceOneByID(ctx context.Context, recordID string, m Document, opts ...*options.ReplaceOptions) (*mongo.UpdateResult, error)
 	GetOneByID(ctx context.Context, recordID string, m Document, opts ...*options.FindOneOptions) error
