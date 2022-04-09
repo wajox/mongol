@@ -26,6 +26,7 @@ const (
 	FindAllByFilterMethod    = "FindAllByFilter"
 	FindManyByFilterMethod   = "FindManyByFilter"
 	UpsertOneMethod          = "UpsertOne"
+	FindAndUpdateOneMethod   = "FindAndUpdateOne"
 	DeleteManyMethod         = "DeleteMany"
 	DeleteManyByFilterMethod = "DeleteManyByFilter"
 	DeleteOneByIDMethod      = "DeleteOneByID"
@@ -49,7 +50,7 @@ type Client struct {
 }
 
 // GetMongoClient
-func (c *Client) GetMongoClient() *mongo.Client {
+func (c *Client) MongoClient() *mongo.Client {
 	return c.mongoClient
 }
 
@@ -91,6 +92,7 @@ func NewBaseCollection(ctx context.Context, mongoURI, dbName, collectionName str
 	return NewBaseCollectionWithClient(client, dbName, collectionName), nil
 }
 
+// NewBaseCollectionWithClient() is a constructor for BaseCollection struct
 func NewBaseCollectionWithClient(client *Client, dbName, collectionName string) *BaseCollection {
 	return &BaseCollection{
 		Client:         client,
@@ -149,14 +151,25 @@ func (s *BaseCollection) AddAfterHook(methodName string, h Hook) {
 
 // Ping() the mongo server
 func (s *BaseCollection) Ping(ctx context.Context) error {
-	return s.Client.GetMongoClient().Ping(ctx, nil)
+	return s.Client.MongoClient().Ping(ctx, nil)
 }
 
-// GetCollection() returns storage collection
-func (s *BaseCollection) GetCollection() *mongo.Collection {
-	return s.Client.GetMongoClient().Database(s.DBName).Collection(s.CollectionName)
+// Collection() returns *mongo.Collection
+func (s *BaseCollection) Collection() *mongo.Collection {
+	return s.Database().Collection(s.CollectionName)
 }
 
+// Database() returns *mongo.Database
+func (s *BaseCollection) Database() *mongo.Database {
+	return s.Client.MongoClient().Database(s.DBName)
+}
+
+// MongoClient() returns *mongo.Client
+func (s *BaseCollection) MongoClient() *mongo.Client {
+	return s.Client.MongoClient()
+}
+
+// CreateIndex creates new index
 func (s *BaseCollection) CreateIndex(ctx context.Context, k interface{}, o *options.IndexOptions) (string, error) {
 	if err := s.runBeforeHooks(ctx, CreateIndexMethod); err != nil {
 		return "", err
@@ -164,7 +177,7 @@ func (s *BaseCollection) CreateIndex(ctx context.Context, k interface{}, o *opti
 
 	defer s.runAfterHooks(ctx, CreateIndexMethod)
 
-	return s.GetCollection().Indexes().CreateOne(ctx, mongo.IndexModel{
+	return s.Collection().Indexes().CreateOne(ctx, mongo.IndexModel{
 		Keys:    k,
 		Options: o,
 	})
@@ -185,7 +198,7 @@ func (s *BaseCollection) InsertOne(ctx context.Context, m Document, opts ...*opt
 		return "", err
 	}
 
-	res, err := s.GetCollection().InsertOne(ctx, b, opts...)
+	res, err := s.Collection().InsertOne(ctx, b, opts...)
 	if err != nil {
 		return "", HandleDuplicationErr(err)
 	}
@@ -210,7 +223,7 @@ func (s *BaseCollection) InsertMany(ctx context.Context, docs []interface{}, opt
 	}
 	defer s.runAfterHooks(ctx, InsertManyMethod)
 
-	res, err := s.GetCollection().InsertMany(ctx, docs, opts...)
+	res, err := s.Collection().InsertMany(ctx, docs, opts...)
 
 	if err != nil {
 		return []string{}, HandleDuplicationErr(err)
@@ -251,7 +264,7 @@ func (s *BaseCollection) UpdateManyByFilter(ctx context.Context, filter interfac
 
 	m.SetupUpdatedAt()
 
-	res, err := s.GetCollection().UpdateOne(
+	res, err := s.Collection().UpdateOne(
 		ctx,
 		filter,
 		bson.D{primitive.E{Key: "$set", Value: m}},
@@ -284,7 +297,7 @@ func (s *BaseCollection) UpdateMany(
 
 	defer s.runAfterHooks(ctx, UpdateManyMethod)
 
-	return s.GetCollection().UpdateMany(
+	return s.Collection().UpdateMany(
 		ctx,
 		filter,
 		update,
@@ -299,15 +312,15 @@ func (s *BaseCollection) FindAndUpdateOne(
 	update bson.M,
 	m Document,
 ) (Document, error) {
-	if err := s.runBeforeHooks(ctx, UpsertOneMethod); err != nil {
+	if err := s.runBeforeHooks(ctx, FindAndUpdateOneMethod); err != nil {
 		return nil, err
 	}
 
-	defer s.runAfterHooks(ctx, UpsertOneMethod)
+	defer s.runAfterHooks(ctx, FindAndUpdateOneMethod)
 
 	opts := options.FindOneAndUpdate().SetReturnDocument(options.After)
 
-	res := s.GetCollection().FindOneAndUpdate(ctx, filter, update, opts)
+	res := s.Collection().FindOneAndUpdate(ctx, filter, update, opts)
 	if err := res.Decode(m); err != nil {
 		if res.Err() == mongo.ErrNoDocuments {
 			return nil, ErrDocumentNotFound
@@ -345,7 +358,7 @@ func (s *BaseCollection) UpsertOne(
 		SetReturnDocument(options.After).
 		SetUpsert(true)
 
-	res := s.GetCollection().FindOneAndUpdate(ctx, filter, update, opts)
+	res := s.Collection().FindOneAndUpdate(ctx, filter, update, opts)
 	if err := res.Decode(m); err != nil {
 		if res.Err() == mongo.ErrNoDocuments {
 			return nil, ErrDocumentNotFound
@@ -381,7 +394,7 @@ func (s *BaseCollection) ReplaceOne(
 
 	m.SetupUpdatedAt()
 
-	return s.GetCollection().ReplaceOne(
+	return s.Collection().ReplaceOne(
 		ctx,
 		filter,
 		m,
@@ -451,7 +464,7 @@ func (s *BaseCollection) GetOneByFilter(
 
 	defer s.runAfterHooks(ctx, GetOneByFilterMethod)
 
-	res := s.GetCollection().FindOne(ctx, filter, opts...)
+	res := s.Collection().FindOne(ctx, filter, opts...)
 	if err := res.Decode(m); err != nil {
 		if res.Err() == mongo.ErrNoDocuments {
 			return ErrDocumentNotFound
@@ -563,7 +576,7 @@ func (s *BaseCollection) FindManyByFilter(
 
 	defer s.runAfterHooks(ctx, FindManyByFilterMethod)
 
-	cur, err := s.GetCollection().Find(ctx, filter, opts...)
+	cur, err := s.Collection().Find(ctx, filter, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -585,7 +598,7 @@ func (s *BaseCollection) CountByFilter(
 	filter interface{},
 ) (int64, error) {
 	opts := options.Count().SetMaxTime(2 * time.Second)
-	return s.GetCollection().CountDocuments(
+	return s.Collection().CountDocuments(
 		context.TODO(),
 		filter,
 		opts,
@@ -603,7 +616,7 @@ func (s *BaseCollection) DeleteManyByFilter(
 	}
 	defer s.runAfterHooks(ctx, DeleteManyByFilterMethod)
 
-	return s.GetCollection().DeleteMany(ctx, filter, opts...)
+	return s.Collection().DeleteMany(ctx, filter, opts...)
 }
 
 // DeleteOneByID() deletes document by given ID
@@ -637,5 +650,5 @@ func (s *BaseCollection) DeleteAll(ctx context.Context) error {
 
 	defer s.runAfterHooks(ctx, DeleteAllMethod)
 
-	return s.GetCollection().Drop(ctx)
+	return s.Collection().Drop(ctx)
 }
