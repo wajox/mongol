@@ -264,21 +264,22 @@ func (s *BaseCollection) UpdateManyByFilter(ctx context.Context, filter interfac
 
 	m.SetupUpdatedAt()
 
-	res, err := s.Collection().UpdateOne(
+	res, err := s.Collection().UpdateMany(
 		ctx,
 		filter,
 		bson.D{primitive.E{Key: "$set", Value: m}},
 		opts...,
 	)
+
 	if err != nil {
 		return HandleDuplicationErr(err)
 	}
 
-	if res.MatchedCount != 1 {
+	if res.MatchedCount == 0 {
 		return ErrDocumentNotFound
 	}
 
-	if res.ModifiedCount != 1 {
+	if res.ModifiedCount == 0 {
 		return ErrDocumentNotModified
 	}
 
