@@ -27,6 +27,22 @@ m := &ExampleModel{}
 id, saveErr := storage.InsertOne(context.TODO(), m)
 ```
 
+## Fiilter example
+```golang
+
+newM := &ExampleModel{}
+
+err := storage.GetOneByFilter(
+	context.TODO(),
+	NewFilterBuilder().EqualTo("_id", m.ID).GetQuery(),
+	newM,
+)
+
+if err != nil {
+	fmt.Printf("%#v", newM)
+}
+```
+
 # Run tests
 
 ```
