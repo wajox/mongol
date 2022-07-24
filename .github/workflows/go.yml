@@ -17,23 +17,7 @@ jobs:
       # You may pin to the exact commit or the version.
       # uses: SusanDoggie/mongodb-action@a150cf7ccd58d490da82ffb225a43abcc7a9d347
       uses: SusanDoggie/mongodb-action@0.0.1
-      with:
-        # Docker network to use (default "bridge")
-        # network: # optional, default is bridge
-        # MongoDB version to use (default "latest")
-        # version: # optional, default is latest
-        # MongoDB version to use (default "mongo")
-        # host: # optional, default is mongo
-        # MongoDB port to use (default 27017)
-        # port: # optional, default is 27017
-        # MongoDB root username (default: none)
-        username: root
-        # MongoDB root password (default: none)
-        password: 12345
-        # MongoDB db to create (default: none)
-        # database: # optional, default is 
-        # MongoDB replica set name (no replica set by default)
-        # replica_set: # optional, default is 
+
     - name: Set up Go
       uses: actions/setup-go@v3
       with:
@@ -43,4 +27,7 @@ jobs:
       run: go build -v ./...
 
     - name: Test
-      run: MONGODB_URI=mongodb://root@12345:127.0.0.1:27017 go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
+      run: MONGODB_URI=mongodb://127.0.0.1:27017 go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
+
+    - name: Codecov
+      run: bash <(curl -s https://codecov.io/bash)
