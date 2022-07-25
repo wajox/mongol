@@ -750,7 +750,7 @@ var _ = Describe("BaseCollection", func() {
 
 				delErr2 := storage.DeleteOneByID(context.TODO(), m1.GetHexID())
 
-				Expect(delErr2).NotTo(BeNil())
+				Expect(delErr2).To(Equal(ErrDocumentNotFound))
 			})
 		})
 
