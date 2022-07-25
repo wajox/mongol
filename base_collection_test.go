@@ -2,6 +2,7 @@ package mongol_test
 
 import (
 	"context"
+	"errors"
 	"os"
 	"time"
 
@@ -104,7 +105,7 @@ var _ = Describe("BaseCollection", func() {
 		})
 
 		Describe("NewBaseCollection()", func() {
-			It("should not create BaseCollectino with worng connection parameters", func() {
+			It("should not create BaseCollection with worng connection parameters", func() {
 				coll, err := NewBaseCollection(context.TODO(), "", "db_name", "coll_name")
 				Expect(coll).To(BeNil())
 				Expect(err).NotTo(BeNil())
@@ -113,6 +114,19 @@ var _ = Describe("BaseCollection", func() {
 
 		Describe("save & find methods", func() {
 			Describe(".InsertOne()", func() {
+				Context("with failing hook", func() {
+					It("should not create new model", func() {
+						storage.AddBeforeHook(InsertOneMethod, func(context.Context) error {
+							return errors.New("some error")
+						})
+
+						m := NewExampleModel()
+
+						_, saveErr := storage.InsertOne(context.TODO(), m)
+						Expect(saveErr).NotTo(BeNil())
+					})
+				})
+
 				It("should create new model", func() {
 					curTime := time.Now().UTC().Add(time.Hour * 1)
 
@@ -150,6 +164,19 @@ var _ = Describe("BaseCollection", func() {
 				})
 
 				Describe(".GetOneByID()", func() {
+					Context("with failing hook", func() {
+						It("should not create new model", func() {
+							storage.AddBeforeHook(GetOneByIDMethod, func(context.Context) error {
+								return errors.New("some error")
+							})
+
+							emptyModel := &ExampleModel{}
+							findErr := storage.GetOneByID(context.TODO(), id, emptyModel)
+
+							Expect(findErr).NotTo(BeNil())
+						})
+					})
+
 					It("should find the model by id", func() {
 						emptyModel := &ExampleModel{}
 						findErr := storage.GetOneByID(context.TODO(), id, emptyModel)
@@ -160,6 +187,26 @@ var _ = Describe("BaseCollection", func() {
 				})
 
 				Describe(".UpdateOne()", func() {
+					Context("with failing hook", func() {
+						It("should not create new model", func() {
+							storage.AddBeforeHook(UpdateOneMethod, func(context.Context) error {
+								return errors.New("some error")
+							})
+
+							curTime := time.Now().UTC().Add(time.Hour * 1)
+
+							timecop.Freeze(curTime)
+							defer timecop.Return()
+
+							newTitle := "New title " + uuid.New().String()
+							m.Title = newTitle
+
+							updateErr := storage.UpdateOne(context.TODO(), m)
+
+							Expect(updateErr).NotTo(BeNil())
+						})
+					})
+
 					It("should update the model", func() {
 						emptyModel := &ExampleModel{}
 
@@ -185,6 +232,22 @@ var _ = Describe("BaseCollection", func() {
 				})
 
 				Describe(".ReplaceOne()", func() {
+					Context("with failing hook", func() {
+						It("should not create new model", func() {
+							storage.AddBeforeHook(ReplaceOneMethod, func(context.Context) error {
+								return errors.New("some error")
+							})
+
+							newTitle := "New title " + uuid.New().String()
+							m.Title = newTitle
+
+							filter := bson.M{"_id": bson.M{"$eq": m.GetID()}}
+							_, updateErr := storage.ReplaceOne(context.TODO(), filter, m)
+
+							Expect(updateErr).NotTo(BeNil())
+						})
+					})
+
 					It("should update the model", func() {
 						emptyModel := &ExampleModel{}
 
@@ -211,6 +274,21 @@ var _ = Describe("BaseCollection", func() {
 				})
 
 				Describe(".ReplaceOneByID()", func() {
+					Context("with failing hook", func() {
+						It("should not create new model", func() {
+							storage.AddBeforeHook(ReplaceOneByIDMethod, func(context.Context) error {
+								return errors.New("some error")
+							})
+
+							newTitle := "New title " + uuid.New().String()
+							m.Title = newTitle
+
+							_, updateErr := storage.ReplaceOneByID(context.TODO(), m.GetHexID(), m)
+
+							Expect(updateErr).NotTo(BeNil())
+						})
+					})
+
 					It("should update the model", func() {
 						emptyModel := &ExampleModel{}
 
