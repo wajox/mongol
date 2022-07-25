@@ -48,6 +48,14 @@ var _ = Describe("BaseCollection", func() {
 		}
 	})
 
+	Describe("NewClient()", func() {
+		It("should create a client", func() {
+			client, err := NewClient(context.TODO(), "")
+			Expect(client).To(BeNil())
+			Expect(err).NotTo(BeNil())
+		})
+	})
+
 	Describe("constructor", func() {
 		It("should create new storage", func() {
 			Expect(storage).NotTo(BeNil())
@@ -58,6 +66,41 @@ var _ = Describe("BaseCollection", func() {
 	Describe("methods", func() {
 		AfterEach(func() {
 			storage.DeleteAll(context.TODO())
+		})
+
+		Describe("hooks", func() {
+			var (
+				hookCalls = 0
+				hook      = func(_ context.Context) error {
+					hookCalls++
+
+					return nil
+				}
+			)
+
+			It("should add and run hooks", func() {
+				storage.AddBeforeHook(FindAllByFilterMethod, hook)
+				storage.AddAfterHook(FindAllByFilterMethod, hook)
+
+				l := []*ExampleModel{}
+
+				err := storage.FindAllByFilter(context.TODO(), bson.M{}, &l)
+
+				Expect(err).To(BeNil())
+				Expect(hookCalls).To(Equal(2))
+			})
+		})
+
+		Describe("Ping()", func() {
+			It("should ping the server", func() {
+				Expect(storage.Ping(context.TODO())).To(BeNil())
+			})
+		})
+
+		Describe("MongoClient()", func() {
+			It("should return the original mongo client", func() {
+				Expect(storage.MongoClient()).NotTo(BeNil())
+			})
 		})
 
 		Describe("save & find methods", func() {
