@@ -103,6 +103,14 @@ var _ = Describe("BaseCollection", func() {
 			})
 		})
 
+		Describe("NewBaseCollection()", func() {
+			It("should not create BaseCollectino with worng connection parameters", func() {
+				coll, err := NewBaseCollection(context.TODO(), "", "db_name", "coll_name")
+				Expect(coll).To(BeNil())
+				Expect(err).NotTo(BeNil())
+			})
+		})
+
 		Describe("save & find methods", func() {
 			Describe(".InsertOne()", func() {
 				It("should create new model", func() {
