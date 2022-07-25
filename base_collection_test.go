@@ -367,7 +367,7 @@ var _ = Describe("BaseCollection", func() {
 				Describe(".UpdateOne()", func() {
 					Context("with failing hook", func() {
 						It("should return error", func() {
-							storage.AddBeforeHook(GetOneByIDMethod, func(context.Context) error {
+							storage.AddBeforeHook(UpdateOneMethod, func(context.Context) error {
 								return errors.New("some error")
 							})
 
@@ -390,6 +390,34 @@ var _ = Describe("BaseCollection", func() {
 		})
 
 		Describe(".InsertMany()", func() {
+			Context("with failing hook", func() {
+				It("should return error", func() {
+					storage.AddBeforeHook(InsertManyMethod, func(context.Context) error {
+						return errors.New("some error")
+					})
+
+					curTime := time.Now().UTC().Add(time.Hour * 1)
+
+					timecop.Freeze(curTime)
+					defer timecop.Return()
+
+					docs := []interface{}{
+						NewExampleModel(),
+						NewExampleModel(),
+						NewExampleModel(),
+					}
+
+					for i, _ := range docs {
+						docs[i].(*ExampleModel).SetupCreatedAt()
+						docs[i].(*ExampleModel).SetupUpdatedAt()
+					}
+
+					_, err := storage.InsertMany(context.TODO(), docs)
+
+					Expect(err).NotTo(BeNil())
+				})
+			})
+
 			It("should insert many records", func() {
 				curTime := time.Now().UTC().Add(time.Hour * 1)
 
