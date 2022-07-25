@@ -6,7 +6,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// ObjectIDsFromStrArr - converts provided array of mongoid strings to ObjectID
+// ObjectIDsFromStrArr() converts provided array of mongoid strings to ObjectID
 func ObjectIDsFromStrArr(idsRaw []string) ([]*primitive.ObjectID, error) {
 	ids := make([]*primitive.ObjectID, len(idsRaw))
 
@@ -22,15 +22,14 @@ func ObjectIDsFromStrArr(idsRaw []string) ([]*primitive.ObjectID, error) {
 	return ids, nil
 }
 
-// IsValidMongoID - validate provided mongoid string
+// IsValidMongoID() validates provided mongoid string
 func IsValidMongoID(id string) bool {
-	if _, err := primitive.ObjectIDFromHex(id); err != nil {
-		return false
-	}
+	_, err := primitive.ObjectIDFromHex(id)
 
-	return true
+	return err == nil
 }
 
+// StringToObjectID() converts the string to Mongo ObjectID
 func StringToObjectID(hexID string) (primitive.ObjectID, error) {
 	oid, err := primitive.ObjectIDFromHex(hexID)
 	if err != nil {
