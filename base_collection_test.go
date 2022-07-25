@@ -478,6 +478,35 @@ var _ = Describe("BaseCollection", func() {
 				ids, _ = storage.InsertMany(context.TODO(), docs)
 			})
 
+			Context("with failing hook", func() {
+				It("should fail with errir", func() {
+					storage.AddBeforeHook(UpdateManyMethod, func(context.Context) error {
+						return errors.New("some error")
+					})
+
+					timecop.Freeze(curTime)
+					defer timecop.Return()
+
+					newTime := curTime.Add(time.Second * 10)
+
+					for _, id := range ids {
+						objID, _ := primitive.ObjectIDFromHex(id)
+						objectIDs = append(objectIDs, objID)
+					}
+
+					filter := bson.M{"_id": bson.M{"$in": objectIDs}}
+					update := bson.M{"$set": bson.M{"updated_at": newTime}}
+
+					_, err := storage.UpdateMany(
+						context.TODO(),
+						filter,
+						update,
+					)
+
+					Expect(err).NotTo(BeNil())
+				})
+			})
+
 			It("should update many records", func() {
 				timecop.Freeze(curTime)
 				defer timecop.Return()
@@ -539,6 +568,22 @@ var _ = Describe("BaseCollection", func() {
 
 			AfterEach(func() {
 				storage.DeleteAll(context.TODO())
+			})
+
+			Context("with failing hook", func() {
+				It("should fail with errir", func() {
+					storage.AddBeforeHook(FindAllByFilterMethod, func(context.Context) error {
+						return errors.New("some error")
+					})
+
+					err := storage.FindAllByFilter(
+						context.TODO(),
+						bson.M{},
+						&l,
+					)
+
+					Expect(err).NotTo(BeNil())
+				})
 			})
 
 			It("should return all models", func() {
