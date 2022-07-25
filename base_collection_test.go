@@ -637,6 +637,20 @@ var _ = Describe("BaseCollection", func() {
 				storage.DeleteAll(context.TODO())
 			})
 
+			Context("with failing hook", func() {
+				It("should not delete by filter", func() {
+					storage.AddBeforeHook(DeleteManyByFilterMethod, func(context.Context) error {
+						return errors.New("some error")
+					})
+
+					_, delErr := storage.DeleteManyByFilter(context.TODO(), bson.M{
+						"title": m1.Title,
+					})
+
+					Expect(delErr).NotTo(BeNil())
+				})
+			})
+
 			It("should delete model by filter", func() {
 				l1, err1 := storage.GetManyByFilter(
 					context.TODO(),
@@ -716,6 +730,27 @@ var _ = Describe("BaseCollection", func() {
 				Expect(l2).NotTo(BeNil())
 				Expect(err2).To(BeNil())
 				Expect(len(l2)).To(Equal(2))
+			})
+
+			It("should return error if document already deleted", func() {
+				l1, err1 := storage.GetManyByFilter(
+					context.TODO(),
+					bson.M{},
+					func() Document {
+						return &ExampleModel{}
+					},
+				)
+
+				Expect(err1).To(BeNil())
+				Expect(len(l1)).To(Equal(3))
+
+				delErr := storage.DeleteOneByID(context.TODO(), m1.GetHexID())
+
+				Expect(delErr).To(BeNil())
+
+				delErr2 := storage.DeleteOneByID(context.TODO(), m1.GetHexID())
+
+				Expect(delErr2).NotTo(BeNil())
 			})
 		})
 
