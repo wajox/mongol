@@ -69,14 +69,14 @@ func (fb *FilterBuilder) NotEqualTo(key string, value interface{}) *FilterBuilde
 }
 
 // In() implements $in condition for the query
-func (fb *FilterBuilder) In(key string, values []interface{}) *FilterBuilder {
+func (fb *FilterBuilder) In(key string, values bson.A) *FilterBuilder {
 	fb.query[key] = bson.M{"$in": values}
 
 	return fb
 }
 
 // NotIn() implements $nin condition for the query
-func (fb *FilterBuilder) NotIn(key string, values []interface{}) *FilterBuilder {
+func (fb *FilterBuilder) NotIn(key string, values bson.A) *FilterBuilder {
 	fb.query[key] = bson.M{"$nin": values}
 
 	return fb

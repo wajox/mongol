@@ -80,6 +80,86 @@ var _ = Describe("FilterBuilder", func() {
 					Expect(query["name"]).To(Equal(bson.M{"$ne": "John"}))
 				})
 			})
+
+			Describe("In()", func() {
+				It("should add a new condition", func() {
+					filter.In("name", bson.A{"John"})
+
+					query := filter.GetQuery()
+
+					Expect(query["name"].(bson.M)["$in"].(bson.A)).To(Equal(bson.A{"John"}))
+				})
+			})
+
+			Describe("NotIn()", func() {
+				It("should add a new condition", func() {
+					filter.NotIn("name", bson.A{"John"})
+
+					query := filter.GetQuery()
+
+					Expect(query["name"].(bson.M)["$nin"].(bson.A)).To(Equal(bson.A{"John"}))
+				})
+			})
+
+			Describe("HasField()", func() {
+				It("should add a new condition", func() {
+					filter.HasField("name")
+
+					query := filter.GetQuery()
+
+					Expect(query["name"].(bson.M)["$exists"].(bool)).To(BeTrue())
+				})
+			})
+
+			Describe("HasNotField()", func() {
+				It("should add a new condition", func() {
+					filter.HasNotField("name")
+
+					query := filter.GetQuery()
+
+					Expect(query["name"].(bson.M)["$exists"].(bool)).To(BeFalse())
+				})
+			})
+
+			Describe("Gte()", func() {
+				It("should add a new condition", func() {
+					filter.Gte("age", 10)
+
+					query := filter.GetQuery()
+
+					Expect(query["age"]).To(Equal(bson.M{"$gte": 10}))
+				})
+			})
+
+			Describe("Lte()", func() {
+				It("should add a new condition", func() {
+					filter.Lte("age", 10)
+
+					query := filter.GetQuery()
+
+					Expect(query["age"]).To(Equal(bson.M{"$lte": 10}))
+				})
+			})
+
+			Describe("Gt()", func() {
+				It("should add a new condition", func() {
+					filter.Gt("age", 10)
+
+					query := filter.GetQuery()
+
+					Expect(query["age"]).To(Equal(bson.M{"$gt": 10}))
+				})
+			})
+
+			Describe("Lt()", func() {
+				It("should add a new condition", func() {
+					filter.Lt("age", 10)
+
+					query := filter.GetQuery()
+
+					Expect(query["age"]).To(Equal(bson.M{"$lt": 10}))
+				})
+			})
 		})
 	})
 })
