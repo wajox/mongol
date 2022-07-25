@@ -344,6 +344,18 @@ var _ = Describe("BaseCollection", func() {
 				})
 
 				Describe(".GetOneByID()", func() {
+					Context("with failing hook", func() {
+						It("should return error", func() {
+							storage.AddBeforeHook(GetOneByIDMethod, func(context.Context) error {
+								return errors.New("some error")
+							})
+
+							emptyModel := &ExampleModel{}
+							findErr := storage.GetOneByID(context.TODO(), id, emptyModel)
+							Expect(findErr).NotTo(BeNil())
+						})
+					})
+
 					It("should find the model by id", func() {
 						emptyModel := &ExampleModel{}
 						findErr := storage.GetOneByID(context.TODO(), id, emptyModel)
@@ -353,6 +365,18 @@ var _ = Describe("BaseCollection", func() {
 				})
 
 				Describe(".UpdateOne()", func() {
+					Context("with failing hook", func() {
+						It("should return error", func() {
+							storage.AddBeforeHook(GetOneByIDMethod, func(context.Context) error {
+								return errors.New("some error")
+							})
+
+							updateErr := storage.UpdateOne(context.TODO(), m)
+
+							Expect(updateErr).NotTo(BeNil())
+						})
+					})
+
 					It("should update the model", func() {
 						emptyModel := &ExampleModel{}
 						updateErr := storage.UpdateOne(context.TODO(), m)
