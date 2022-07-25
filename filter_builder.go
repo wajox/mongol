@@ -17,7 +17,7 @@ func NewFilterBuilder() *FilterBuilder {
 }
 
 // GetQuery() returns compiled query for *FilterBuilder
-func (fb *FilterBuilder) GetQuery() interface{} {
+func (fb *FilterBuilder) GetQuery() bson.M {
 	return fb.query
 }
 
