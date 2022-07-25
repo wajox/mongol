@@ -10,6 +10,7 @@ import (
 	. "github.com/onsi/gomega"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
 
 	timecop "github.com/bluele/go-timecop"
 	"github.com/google/uuid"
@@ -92,13 +93,13 @@ var _ = Describe("BaseCollection", func() {
 			})
 		})
 
-		Describe("Ping()", func() {
+		Describe(".Ping()", func() {
 			It("should ping the server", func() {
 				Expect(storage.Ping(context.TODO())).To(BeNil())
 			})
 		})
 
-		Describe("MongoClient()", func() {
+		Describe(".MongoClient()", func() {
 			It("should return the original mongo client", func() {
 				Expect(storage.MongoClient()).NotTo(BeNil())
 			})
@@ -109,6 +110,24 @@ var _ = Describe("BaseCollection", func() {
 				coll, err := NewBaseCollection(context.TODO(), "", "db_name", "coll_name")
 				Expect(coll).To(BeNil())
 				Expect(err).NotTo(BeNil())
+			})
+		})
+
+		Describe(".CreateIndex()", func() {
+			Context("with failing hook", func() {
+				It("should not create an index", func() {
+					storage.AddBeforeHook(CreateIndexMethod, func(context.Context) error {
+						return errors.New("some error")
+					})
+
+					_, err := storage.CreateIndex(context.TODO(), bson.D{{"title", 1}}, &options.IndexOptions{})
+					Expect(err).NotTo(BeNil())
+				})
+			})
+
+			It("should create an index", func() {
+				_, err := storage.CreateIndex(context.TODO(), bson.D{{"title", 1}}, &options.IndexOptions{})
+				Expect(err).To(BeNil())
 			})
 		})
 
