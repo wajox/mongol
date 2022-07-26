@@ -308,6 +308,23 @@ var _ = Describe("BaseCollection", func() {
 						})
 					})
 
+					Context("with wrong record ID", func() {
+						It("should not update the model", func() {
+
+							curTime := time.Now().UTC().Add(time.Hour * 1)
+
+							timecop.Freeze(curTime)
+							defer timecop.Return()
+
+							newTitle := "New title " + uuid.New().String()
+							m.Title = newTitle
+
+							_, updateErr := storage.ReplaceOneByID(context.TODO(), "123", m)
+
+							Expect(updateErr).To(Equal(ErrInvalidObjectID))
+						})
+					})
+
 					It("should update the model", func() {
 						emptyModel := &ExampleModel{}
 
