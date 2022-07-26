@@ -1,5 +1,6 @@
 # Mongol
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Go Reference](https://pkg.go.dev/badge/github.com/wajox/mongol.svg)](https://pkg.go.dev/github.com/wajox/mongol)
 [![codecov](https://codecov.io/gh/wajox/mongol/branch/master/graph/badge.svg?token=MFEF13319U)](https://codecov.io/gh/wajox/mongol)
 ![Go workflow](https://github.com/wajox/mongol/actions/workflows/go.yml/badge.svg)
