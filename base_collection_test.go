@@ -252,7 +252,7 @@ var _ = Describe("BaseCollection", func() {
 
 				Describe(".UpdateManyByFilter()", func() {
 					Context("with failing hook", func() {
-						It("should not create new model", func() {
+						It("should not update the model", func() {
 							storage.AddBeforeHook(UpdateManyByFilterMethod, func(context.Context) error {
 								return errors.New("some error")
 							})
@@ -964,6 +964,33 @@ var _ = Describe("BaseCollection", func() {
 
 			AfterEach(func() {
 				storage.DeleteAll(context.TODO())
+			})
+
+			Context("with failing hook", func() {
+				It("should not update the model", func() {
+					storage.AddBeforeHook(FindAndUpdateOneMethod, func(context.Context) error {
+						return errors.New("some error")
+					})
+
+					ctx := context.Background()
+					filter := bson.M{"_id": m1.BaseDocument.ID}
+					update := bson.M{
+						"$set": bson.M{
+							"title": m1.Title,
+						},
+					}
+
+					update = bson.M{
+						"$set": bson.M{
+							"title": m1.Title + "updated",
+						},
+					}
+
+					/* update existing record */
+					updatedModel, err := storage.FindAndUpdateOne(ctx, filter, update, &ExampleModel{})
+					Expect(err).NotTo(BeNil())
+					Expect(updatedModel).To(BeNil())
+				})
 			})
 
 			It("should update model when it exists", func() {
