@@ -23,6 +23,42 @@ type ExampleModel struct {
 	Title string `json:"title,omitempty" bson:"title,omitempty"`
 }
 
+type ExampleModelWithoutTimestamps struct {
+	ID    primitive.ObjectID `json:"id,omitempty" bson:"_id,omitempty"`
+	Title string             `json:"title,omitempty" bson:"title,omitempty"`
+}
+
+func (m *ExampleModelWithoutTimestamps) GetID() primitive.ObjectID {
+	return m.ID
+}
+
+func (m *ExampleModelWithoutTimestamps) GetHexID() string {
+	return m.ID.Hex()
+}
+
+func (m *ExampleModelWithoutTimestamps) SetHexID(hexID string) error {
+	oid, err := StringToObjectID(hexID)
+	if err != nil {
+		return err
+	}
+
+	m.ID = oid
+
+	return nil
+}
+
+func (m *ExampleModelWithoutTimestamps) SetupCreatedAt() {
+
+}
+
+func (m *ExampleModelWithoutTimestamps) SetupUpdatedAt() {
+
+}
+
+func (m *ExampleModelWithoutTimestamps) SetJSONID(jsonB []byte) error {
+	return m.ID.UnmarshalJSON(jsonB)
+}
+
 func NewExampleModel() *ExampleModel {
 	return &ExampleModel{Title: "Test title " + uuid.New().String()}
 }
@@ -294,6 +330,22 @@ var _ = Describe("BaseCollection", func() {
 						Expect(emptyModel.Title).To(Equal(newTitle))
 						Expect(emptyModel.CreatedAt.Unix()).NotTo(Equal(curTime.Unix()))
 						Expect(emptyModel.UpdatedAt.Unix()).To(Equal(curTime.Unix()))
+					})
+
+					It("should not update the model", func() {
+						curTime := time.Now().UTC().Add(time.Hour * 1)
+
+						timecop.Freeze(curTime)
+						defer timecop.Return()
+
+						filter := NewFilterBuilder().EqualTo("_id", m.GetID()).GetQuery()
+						update := &ExampleModelWithoutTimestamps{Title: m.Title}
+						update.SetHexID(m.GetHexID())
+
+						updateErr := storage.UpdateManyByFilter(context.TODO(), filter, update)
+
+						Expect(updateErr).To(Equal(ErrDocumentNotModified))
+
 					})
 				})
 
