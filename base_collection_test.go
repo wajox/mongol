@@ -974,13 +974,8 @@ var _ = Describe("BaseCollection", func() {
 
 					ctx := context.Background()
 					filter := bson.M{"_id": m1.BaseDocument.ID}
-					update := bson.M{
-						"$set": bson.M{
-							"title": m1.Title,
-						},
-					}
 
-					update = bson.M{
+					update := bson.M{
 						"$set": bson.M{
 							"title": m1.Title + "updated",
 						},
@@ -998,12 +993,6 @@ var _ = Describe("BaseCollection", func() {
 				filter := bson.M{"_id": m1.BaseDocument.ID}
 				update := bson.M{
 					"$set": bson.M{
-						"title": m1.Title,
-					},
-				}
-
-				update = bson.M{
-					"$set": bson.M{
 						"title": m1.Title + "updated",
 					},
 				}
@@ -1018,6 +1007,21 @@ var _ = Describe("BaseCollection", func() {
 				findErr := storage.GetOneByID(context.TODO(), docID, findRes)
 				Expect(findErr).To(BeNil())
 				Expect(findRes).To(Equal(updatedModel))
+			})
+
+			It("should update model when it does not exists", func() {
+				ctx := context.Background()
+				filter := bson.M{"_id": "123"}
+
+				update := bson.M{
+					"$set": bson.M{
+						"title": m1.Title + "updated",
+					},
+				}
+
+				/* update existing record */
+				_, err := storage.FindAndUpdateOne(ctx, filter, update, &ExampleModel{})
+				Expect(err).To(Equal(ErrDocumentNotFound))
 			})
 		})
 	})
