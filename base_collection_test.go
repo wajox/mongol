@@ -250,6 +250,53 @@ var _ = Describe("BaseCollection", func() {
 					})
 				})
 
+				Describe(".UpdateManyByFilter()", func() {
+					Context("with failing hook", func() {
+						It("should not create new model", func() {
+							storage.AddBeforeHook(UpdateManyByFilterMethod, func(context.Context) error {
+								return errors.New("some error")
+							})
+
+							curTime := time.Now().UTC().Add(time.Hour * 1)
+
+							timecop.Freeze(curTime)
+							defer timecop.Return()
+
+							newTitle := "New title " + uuid.New().String()
+							m.Title = newTitle
+							filter := NewFilterBuilder().EqualTo("_id", m.GetID()).GetQuery()
+
+							updateErr := storage.UpdateManyByFilter(context.TODO(), filter, m)
+
+							Expect(updateErr).NotTo(BeNil())
+						})
+					})
+
+					It("should update the model", func() {
+						emptyModel := &ExampleModel{}
+
+						curTime := time.Now().UTC().Add(time.Hour * 1)
+
+						timecop.Freeze(curTime)
+						defer timecop.Return()
+
+						newTitle := "New title " + uuid.New().String()
+						m.Title = newTitle
+
+						filter := NewFilterBuilder().EqualTo("_id", m.GetID()).GetQuery()
+						updateErr := storage.UpdateManyByFilter(context.TODO(), filter, m)
+
+						findErr := storage.GetOneByID(context.TODO(), id, emptyModel)
+
+						Expect(updateErr).To(BeNil())
+						Expect(findErr).To(BeNil())
+
+						Expect(emptyModel.Title).To(Equal(newTitle))
+						Expect(emptyModel.CreatedAt.Unix()).NotTo(Equal(curTime.Unix()))
+						Expect(emptyModel.UpdatedAt.Unix()).To(Equal(curTime.Unix()))
+					})
+				})
+
 				Describe(".ReplaceOne()", func() {
 					Context("with failing hook", func() {
 						It("should not create new model", func() {
