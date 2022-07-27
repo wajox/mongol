@@ -909,6 +909,27 @@ var _ = Describe("BaseCollection", func() {
 				storage.DeleteAll(context.TODO())
 			})
 
+			Context("with failing hook", func() {
+				It("should not update the model", func() {
+					storage.AddBeforeHook(UpsertOneMethod, func(context.Context) error {
+						return errors.New("some error")
+					})
+
+					ctx := context.Background()
+					filter := bson.M{"_id": m1.BaseDocument.ID}
+					update := bson.M{
+						"$set": bson.M{
+							"title": m1.Title,
+						},
+					}
+
+					/* insert record */
+					_, err := storage.UpsertOne(ctx, filter, update, &ExampleModel{})
+
+					Expect(err).NotTo(BeNil())
+				})
+			})
+
 			It("should upsert model if was no previous", func() {
 				ctx := context.Background()
 				filter := bson.M{"_id": m1.BaseDocument.ID}
