@@ -241,6 +241,31 @@ var _ = Describe("BaseCollection", func() {
 					})
 				})
 
+				Describe(".GetOneByFilter()", func() {
+					Context("with failing hook", func() {
+						It("should not find the model", func() {
+							storage.AddBeforeHook(GetOneByFilterMethod, func(context.Context) error {
+								return errors.New("some error")
+							})
+
+							emptyModel := &ExampleModel{}
+							filter := NewFilterBuilder().EqualTo("_id", m.GetID()).GetQuery()
+							findErr := storage.GetOneByFilter(context.TODO(), filter, emptyModel)
+
+							Expect(findErr).NotTo(BeNil())
+						})
+					})
+
+					It("should find the model by filter", func() {
+						emptyModel := &ExampleModel{}
+						filter := NewFilterBuilder().EqualTo("_id", m.GetID()).GetQuery()
+						findErr := storage.GetOneByFilter(context.TODO(), filter, emptyModel)
+
+						Expect(findErr).To(BeNil())
+						Expect(emptyModel.Title).To(Equal(m.Title))
+					})
+				})
+
 				Describe(".UpdateOne()", func() {
 					Context("with failing hook", func() {
 						It("should not create new model", func() {
