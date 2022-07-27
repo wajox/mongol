@@ -1018,6 +1018,38 @@ var _ = Describe("BaseCollection", func() {
 				Expect(findErr).To(BeNil())
 				Expect(findRes).To(Equal(upsertedModel))
 			})
+
+			It("should not upsert model if was no previous with wrong ID", func() {
+				ctx := context.Background()
+				filter := bson.M{"_id": m1.BaseDocument.ID}
+				update := bson.M{
+					"$set": bson.M{
+						"title": m1.Title,
+					},
+				}
+
+				/* insert record */
+				insertedModel, err := storage.UpsertOne(ctx, filter, update, &ExampleModel{})
+				Expect(err).To(BeNil())
+				Expect(m1).To(Equal(insertedModel))
+
+				findRes := &ExampleModel{}
+				findErr := storage.GetOneByID(context.TODO(), docID, findRes)
+				Expect(findErr).To(BeNil())
+				Expect(findRes).To(Equal(insertedModel))
+
+				update = bson.M{
+					"$set": bson.M{
+						"title": m1.Title + "updated",
+					},
+				}
+
+				/* upsert existing record */
+				filter = bson.M{"_id": "123"}
+				upsertedModel, err := storage.UpsertOne(ctx, filter, update, &ExampleModel{})
+				Expect(err).NotTo(BeNil())
+				Expect(upsertedModel).To(BeNil())
+			})
 		})
 
 		Describe(".FindAndUpdateOne()", func() {
